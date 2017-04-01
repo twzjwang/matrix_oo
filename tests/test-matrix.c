@@ -1,5 +1,7 @@
 #include "matrix.h"
+#include "stopwatch.h"
 #include <stdio.h>
+#include <unistd.h>
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
@@ -10,8 +12,13 @@ char info[2][8] = {"Naive", "SSE"};
 
 int main()
 {
+    double time;
+
+    watch_p ctx = Stopwatch.create();
+    if (!ctx) return -1;
+
     for (int i = 0; i <= 1; i++) {
-        printf("test : %s\n", info[i]);
+        printf("test    : %s\n", info[i]);
 
         MatrixAlgo *algo = matrix_providers[0];
 
@@ -34,7 +41,12 @@ int main()
             },
         });
 
+        Stopwatch.reset(ctx);
+        Stopwatch.start(ctx);
+
         algo->mul(&dst, &m, &n);
+
+        time = Stopwatch.read(ctx);
 
         algo->assign(&fixed, (Mat4x4) {
             .values = {
@@ -46,10 +58,12 @@ int main()
         });
 
         if (algo->equal(&dst, &fixed))
-            printf("    equal!\n\n");
+            printf("result   : equal!\n");
         else
-            printf("    not equal!\n\n");
+            printf("result   : not equal!\n");
+        printf("exe time : %lf ms\n\n", time);
     }
 
+    Stopwatch.destroy(ctx);
     return 0;
 }
