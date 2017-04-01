@@ -31,7 +31,7 @@ static bool equal(const Matrix *l, const Matrix *r)
     return true;
 }
 
-bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
+bool naive_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
     /* FIXME: error hanlding */
     dst->priv = malloc(4 * 4 * sizeof(float));
@@ -46,5 +46,5 @@ bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
 MatrixAlgo NaiveMatrixProvider = {
     .assign = assign,
     .equal = equal,
-    .mul = mul,
+    .mul = naive_mul,
 };

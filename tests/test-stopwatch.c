@@ -10,7 +10,7 @@ int main()
     Stopwatch.start(ctx);
     for (int i = 0; i < 5; i++) {
         printf("\b  %d\r", i);;
-	fflush(stdout);
+        fflush(stdout);
         sleep(1);
     }
     double now = Stopwatch.read(ctx);
