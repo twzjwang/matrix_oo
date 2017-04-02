@@ -39,8 +39,11 @@ check: $(EXEC)
 		echo "Execute $$test..." ; $$test && echo "OK!\n" ; \
 	done
 
+make plot: check
+	gnuplot scripts/runtime.gp
+
 clean:
-	$(RM) $(EXEC) $(OBJS) $(deps)
+	$(RM) $(EXEC) $(OBJS) $(deps) record.csv runtime.png
 	@rm -rf $(OUT)
 
 -include $(deps)
