@@ -1,31 +1,41 @@
 #include "matrix.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <immintrin.h>
 
-struct sse_priv {
-    int values[4][4];
+struct naive_priv {
+    int **values;
 };
 
 #define PRIV(x) \
-    ((struct sse_priv *) ((x)->priv))
+    ((struct naive_priv *) ((x)->priv))
 
-static void assign(Matrix *thiz, Mat4x4 data)
+static void assign(Matrix *thiz, int row, int col, int **data)
 {
-    /* FIXME: don't hardcode row & col */
-    thiz->row = thiz->col = 4;
+    thiz->row = row;
+    thiz->col = col;
 
-    thiz->priv = malloc(4 * 4 * sizeof(float));
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            PRIV(thiz)->values[i][j] = data.values[i][j];
+    struct naive_priv *construct = malloc(sizeof(struct naive_priv));
+    construct->values = (int **) malloc(thiz->row * sizeof(int *));
+    for (int i = 0; i < thiz->row; i++)
+        construct->values[i] = (int *) malloc(thiz->col * sizeof(int));
+    thiz->priv = construct;
+
+    for (int i = 0; i < thiz->row; i++)
+        for (int j = 0; j < thiz->col; j++)
+            PRIV(thiz)->values[i][j] = data[i][j];
 }
 
 static const float epsilon = 1 / 10000.0;
 
 static bool equal(const Matrix *l, const Matrix *r)
 {
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
+    if (l->row != r->row || l->col != r->col) {
+        printf("%dx%d matrix and %dx%d matrix are not equal!\n", l->row, l->col, r->row, r->col);
+        return false;
+    }
+    for (int i = 0; i < l->row; i++)
+        for (int j = 0; j < l->col; j++)
             if (PRIV(l)->values[i][j] + epsilon < PRIV(r)->values[i][j] ||
                     PRIV(r)->values[i][j] + epsilon < PRIV(l)->values[i][j])
                 return false;
@@ -34,17 +44,30 @@ static bool equal(const Matrix *l, const Matrix *r)
 
 bool sse_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
-    dst->priv = malloc(4 * 4 * sizeof(float));
-    int src1_h = 4;
-    int src2_w = 4;
-    for (int x = 0; x < src1_h; x += 4) {
-        for (int y = 0; y < src2_w; y += 4) {
+    if (l->col != r->row) {
+        printf("can't operate with %dx%d matrix and %dx%d matrix!\n", l->row, l->col, r->row, r->col);
+        return false;
+    }
+    dst->row = l->row;
+    dst->col = r->col;
+
+    struct naive_priv *construct = malloc(sizeof(struct naive_priv));
+    if (!construct)
+        return false;
+
+    construct->values = (int **) malloc(dst->row * sizeof(int *));
+    for (int i = 0; i < dst->row; i++)
+        construct->values[i] = (int *) malloc(dst->col * sizeof(int));
+    dst->priv = construct;
+
+    for (int x = 0; x < dst->row; x += 4) {
+        for (int y = 0; y < dst->col; y += 4) {
             __m128i des0 = _mm_setzero_si128 ();
             __m128i des1 = _mm_setzero_si128 ();
             __m128i des2 = _mm_setzero_si128 ();
             __m128i des3 = _mm_setzero_si128 ();
 
-            for (int k = 0; k < src2_w; k += 4) {
+            for (int k = 0; k < l->col; k += 4) {
                 __m128i I0 = _mm_load_si128((__m128i *)&(PRIV(l)->values[(x + 0)][k]));
                 __m128i I1 = _mm_load_si128((__m128i *)&(PRIV(l)->values[(x + 1)][k]));
                 __m128i I2 = _mm_load_si128((__m128i *)&(PRIV(l)->values[(x + 2)][k]));

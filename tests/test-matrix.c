@@ -1,7 +1,12 @@
 #include "matrix.h"
 #include "stopwatch.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+
+#define MAX 512
+#define TEST 25
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
@@ -12,58 +17,88 @@ char info[2][8] = {"Naive", "SSE"};
 
 int main()
 {
-    double time;
-
+    Matrix dst, m, n, fixed;
+    double exe_time, sum[2];
     watch_p ctx = Stopwatch.create();
-    if (!ctx) return -1;
+    if (!ctx)
+        return -1;
 
-    for (int i = 0; i <= 1; i++) {
-        printf("test    : %s\n", info[i]);
+    srand(time(NULL));
 
-        MatrixAlgo *algo = matrix_providers[0];
+    FILE *fp = fopen("record.csv", "w");
 
-        Matrix dst, m, n, fixed;
-        algo->assign(&m, (Mat4x4) {
-            .values = {
-                { 1, 2, 3, 4, },
-                { 5, 6, 7, 8, },
-                { 1, 2, 3, 4, },
-                { 5, 6, 7, 8, },
-            },
-        });
+    int **data_n = (int **) malloc(MAX * sizeof(int *));
+    for (int k = 0; k < MAX; k++)
+        data_n[k] = (int *) malloc(MAX * sizeof(int));
 
-        algo->assign(&n, (Mat4x4) {
-            .values = {
-                { 1, 2, 3, 4, },
-                { 5, 6, 7, 8, },
-                { 1, 2, 3, 4, },
-                { 5, 6, 7, 8, },
-            },
-        });
+    int **data_m = (int **) malloc(MAX * sizeof(int *));
+    for (int k = 0; k < MAX; k++)
+        data_m[k] = (int *) malloc(MAX * sizeof(int));
 
-        Stopwatch.reset(ctx);
-        Stopwatch.start(ctx);
+    int **data_fixed = (int **) malloc(MAX * sizeof(int *));
+    for (int k = 0; k < MAX; k++)
+        data_fixed[k] = (int *) malloc(MAX * sizeof(int));
 
-        algo->mul(&dst, &m, &n);
+    for (int j = 1; j <= MAX; j *= 2) {
+        for (int i = 0; i <= 1; i++)
+            sum[i] = 0;
+        for (int t = 0; t < TEST; t++) {
+            for (int k = 0; k < j; k++)
+                for (int l = 0; l < j; l++)
+                    data_n[k][l] = rand() % 100;
 
-        time = Stopwatch.read(ctx);
+            for (int k = 0; k < j; k++)
+                for (int l = 0; l < j; l++)
+                    data_m[k][l] = rand() % 100;
 
-        algo->assign(&fixed, (Mat4x4) {
-            .values = {
-                { 34,  44,  54,  64, },
-                { 82, 108, 134, 160, },
-                { 34,  44,  54,  64, },
-                { 82, 108, 134, 160, },
-            },
-        });
+            for (int k = 0; k < j; k++)
+                for (int l = 0; l < j; l++) {
+                    data_fixed[k][l] = 0;
+                    for(int p = 0; p < j; p++)
+                        data_fixed[k][l] += data_n[k][p] * data_m[p][l];
+                }
 
-        if (algo->equal(&dst, &fixed))
-            printf("result   : equal!\n");
-        else
-            printf("result   : not equal!\n");
-        printf("exe time : %lf ms\n\n", time);
+            for (int i = 0; i <= 1; i++) {
+                MatrixAlgo *algo = matrix_providers[i];
+                if (i == 1 && j % 4 != 0)
+                    continue;
+
+                algo->assign(&m, j, j, data_n);
+                algo->assign(&n, j, j, data_m);
+                algo->assign(&fixed, j, j, data_fixed);
+
+                Stopwatch.reset(ctx);
+                Stopwatch.start(ctx);
+                int f = algo->mul(&dst, &m, &n);
+                exe_time = Stopwatch.read(ctx);
+                sum[i] += exe_time;
+
+                if (!f)
+                    printf("result   : mul error!\n");
+                else if (!algo->equal(&dst, &fixed))
+                    printf("result   : not equal!\n");
+            }
+        }
+        fprintf(fp, "%d ", j);
+        for (int i = 0; i <= 1; i++) {
+            printf("\ntest     : %s\n", info[i]);
+            printf("matrix   : %d x %d\n", j, j);
+            printf("exe time : %lf ms\n", sum[i] / TEST);
+            fprintf(fp, ",%lf", sum[i] / TEST);
+        }
+        fprintf(fp, "\n");
     }
 
+    for (int k = 0; k < MAX; k++) {
+        free(data_n[k]);
+        free(data_m[k]);
+        free(data_fixed[k]);
+    }
+
+    free(data_n);
+    free(data_m);
+    free(data_fixed);
     Stopwatch.destroy(ctx);
+    fclose(fp);
     return 0;
 }
