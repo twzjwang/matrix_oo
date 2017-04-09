@@ -13,12 +13,11 @@ MatrixAlgo *matrix_providers[] = {
     &SSEMatrixProvider,
 };
 
-char info[2][8] = {"Naive", "SSE"};
-
 int main()
 {
     Matrix dst, m, n, fixed;
     double exe_time, sum[2];
+    char info[16];
     watch_p ctx = Stopwatch.create();
     if (!ctx)
         return -1;
@@ -81,7 +80,9 @@ int main()
         }
         fprintf(fp, "%d ", j);
         for (int i = 0; i <= 1; i++) {
-            printf("\ntest     : %s\n", info[i]);
+            MatrixAlgo *algo = matrix_providers[i];
+            algo->get_info(info);
+            printf("\ntest     : %s\n", info);
             printf("matrix   : %d x %d\n", j, j);
             printf("exe time : %lf ms\n", sum[i] / TEST);
             fprintf(fp, ",%lf", sum[i] / TEST);

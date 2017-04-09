@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static char INFO[] = {"Naive"};
+
 struct naive_priv {
     int **values;
 };
@@ -67,8 +69,14 @@ static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
     return true;
 }
 
+static void get_info(char *info)
+{
+    strcpy(info, INFO);
+}
+
 MatrixAlgo NaiveMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = mul,
+    .get_info = get_info,
 };

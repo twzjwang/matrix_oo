@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <immintrin.h>
 
+static char INFO[] = {"SSE"};
+
 struct naive_priv {
     int **values;
 };
@@ -180,8 +182,14 @@ static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
     return true;
 }
 
+static void get_info(char *info)
+{
+    strcpy(info, INFO);
+}
+
 MatrixAlgo SSEMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = mul,
+    .get_info = get_info,
 };
