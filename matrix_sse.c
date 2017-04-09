@@ -42,7 +42,7 @@ static bool equal(const Matrix *l, const Matrix *r)
     return true;
 }
 
-bool sse_mul(Matrix *dst, const Matrix *l, const Matrix *r)
+static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
     if (l->col != r->row) {
         printf("can't operate with %dx%d matrix and %dx%d matrix!\n", l->row, l->col, r->row, r->col);
@@ -183,5 +183,5 @@ bool sse_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 MatrixAlgo SSEMatrixProvider = {
     .assign = assign,
     .equal = equal,
-    .mul = sse_mul,
+    .mul = mul,
 };
