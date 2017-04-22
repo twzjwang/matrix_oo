@@ -8,15 +8,20 @@
 #define MAX 512
 #define TEST 25
 
+/* Number of the provider */
+#define PROV 3
+
+
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
     &SSEMatrixProvider,
+    &StrassenMatrixProvider
 };
 
 int main()
 {
     Matrix dst, m, n, fixed;
-    double exe_time, sum[2];
+    double exe_time, sum[PROV];
     char info[16];
     watch_p ctx = Stopwatch.create();
     if (!ctx)
@@ -39,7 +44,7 @@ int main()
         data_fixed[k] = (int *) malloc(MAX * sizeof(int));
 
     for (int j = 1; j <= MAX; j *= 2) {
-        for (int i = 0; i <= 1; i++)
+        for (int i = 0; i < PROV; i++)
             sum[i] = 0;
         for (int t = 0; t < TEST; t++) {
             for (int k = 0; k < j; k++)
@@ -57,7 +62,7 @@ int main()
                         data_fixed[k][l] += data_n[k][p] * data_m[p][l];
                 }
 
-            for (int i = 0; i <= 1; i++) {
+            for (int i = 0; i < PROV; i++) {
                 MatrixAlgo *algo = matrix_providers[i];
                 if (i == 1 && j % 4 != 0)
                     continue;
@@ -79,7 +84,7 @@ int main()
             }
         }
         fprintf(fp, "%d ", j);
-        for (int i = 0; i <= 1; i++) {
+        for (int i = 0; i < PROV; i++) {
             MatrixAlgo *algo = matrix_providers[i];
             algo->get_info(info);
             printf("\ntest     : %s\n", info);
@@ -88,6 +93,7 @@ int main()
             fprintf(fp, ",%lf", sum[i] / TEST);
         }
         fprintf(fp, "\n");
+        printf("\n\n");
     }
 
     for (int k = 0; k < MAX; k++) {
