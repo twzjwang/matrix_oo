@@ -2,110 +2,112 @@
 #include "stopwatch.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 
 #define MAX 512
-#define TEST 25
+#define TEST_NUM 50
+#define ALGO_NUM 3
 
-/* Number of the provider */
-#define PROV 3
-
+static const int align = 16;
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
     &SSEMatrixProvider,
-    &StrassenMatrixProvider
+    &StrassenMatrixProvider,
 };
+
+void generate_data(int **a, int m, int n, int range)
+{
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+            a[i][j] = rand() % range;
+}
 
 int main()
 {
-    Matrix dst, m, n, fixed;
-    double exe_time, sum[PROV];
+    double avg[MAX+1][ALGO_NUM], sum, log[TEST_NUM];
     char info[16];
+
     watch_p ctx = Stopwatch.create();
     if (!ctx)
         return -1;
 
-    srand(time(NULL));
+    int **data = (int **) malloc(MAX * sizeof(int *));
+    for (int k = 0; k < MAX; k++)
+        data[k] = (int *) malloc(MAX * sizeof(int));
 
     FILE *fp = fopen("record.csv", "w");
 
-    int **data_n = (int **) malloc(MAX * sizeof(int *));
-    for (int k = 0; k < MAX; k++)
-        data_n[k] = (int *) malloc(MAX * sizeof(int));
+    //C = A x B
+    Matrix A, B, C;
 
-    int **data_m = (int **) malloc(MAX * sizeof(int *));
-    for (int k = 0; k < MAX; k++)
-        data_m[k] = (int *) malloc(MAX * sizeof(int));
+    //verify multiplication
+    //A x (B x r) = C x r
+    Matrix r, L_Br, L_ABr, R_Cr;
 
-    int **data_fixed = (int **) malloc(MAX * sizeof(int *));
-    for (int k = 0; k < MAX; k++)
-        data_fixed[k] = (int *) malloc(MAX * sizeof(int));
+    srand(time(NULL));
 
-    for (int j = 1; j <= MAX; j *= 2) {
-        for (int i = 0; i < PROV; i++)
-            sum[i] = 0;
-        for (int t = 0; t < TEST; t++) {
-            for (int k = 0; k < j; k++)
-                for (int l = 0; l < j; l++)
-                    data_n[k][l] = rand() % 100;
+    for (int al = 0; al < ALGO_NUM; al++) {
+        MatrixAlgo *algo = matrix_providers[al];
+        algo->get_info(info);
+        printf("\nalgo     : %s\n\n", info);
+        for (int size = 4; size <= MAX; size *= 2) {
+            sum = 0;
+            for (int t = 0; t < TEST_NUM; t++) {
+                algo = matrix_providers[al];
+                generate_data(data, size, size, 1000);
+                algo->assign(&A, size, size, (int **)data);
+                generate_data(data, size, size, 1000);
+                algo->assign(&B, size, size, (int **)data);
+                generate_data(data, size, 1, 2);
+                algo->assign(&r, size, 1, (int **)data);
 
-            for (int k = 0; k < j; k++)
-                for (int l = 0; l < j; l++)
-                    data_m[k][l] = rand() % 100;
-
-            for (int k = 0; k < j; k++)
-                for (int l = 0; l < j; l++) {
-                    data_fixed[k][l] = 0;
-                    for(int p = 0; p < j; p++)
-                        data_fixed[k][l] += data_n[k][p] * data_m[p][l];
-                }
-
-            for (int i = 0; i < PROV; i++) {
-                MatrixAlgo *algo = matrix_providers[i];
-                if (i == 1 && j % 4 != 0)
-                    continue;
-
-                algo->assign(&m, j, j, data_n);
-                algo->assign(&n, j, j, data_m);
-                algo->assign(&fixed, j, j, data_fixed);
-
+                //C = A x B
                 Stopwatch.reset(ctx);
                 Stopwatch.start(ctx);
-                int f = algo->mul(&dst, &m, &n);
-                exe_time = Stopwatch.read(ctx);
-                sum[i] += exe_time;
-
-                if (!f)
-                    printf("result   : mul error!\n");
-                else if (!algo->equal(&dst, &fixed))
-                    printf("result   : not equal!\n");
+                if (!algo->mul(&C, &A, &B)) {
+                    printf("A x B error!\n");
+                    continue;
+                }
+                log[t] = Stopwatch.read(ctx);
+                sum += log[t];
+                algo = matrix_providers[0];
+                //implement Freivalds’ algorithm
+                if (!algo->mul(&L_Br, &B, &r)) {
+                    printf("B x r error!\n");
+                    continue;
+                }
+                if (!algo->mul(&L_ABr, &A, &L_Br)) {
+                    printf("A x Br error!\n");
+                    continue;
+                }
+                if (!algo->mul(&R_Cr, &C, &r)) {
+                    printf("C x r error!\n");
+                    continue;
+                }
+                if (!algo->equal(&L_ABr, &R_Cr))
+                    printf("ABr and Cr are not equal!");
             }
+            avg[size][al] = sum / TEST_NUM;
+            printf("matrix   : %d x %d\n", size, size);
+            printf("exe time : %lf ms\n\n", avg[size][al]);
         }
-        fprintf(fp, "%d ", j);
-        for (int i = 0; i < PROV; i++) {
-            MatrixAlgo *algo = matrix_providers[i];
-            algo->get_info(info);
-            printf("\ntest     : %s\n", info);
-            printf("matrix   : %d x %d\n", j, j);
-            printf("exe time : %lf ms\n", sum[i] / TEST);
-            fprintf(fp, ",%lf", sum[i] / TEST);
-        }
+    }
+
+    for (int size = 4; size <= MAX; size *= 2) {
+        fprintf(fp, "%d", size);
+        for (int al = 0; al < ALGO_NUM; al++)
+            fprintf(fp, ",%lf", avg[size][al]);
         fprintf(fp, "\n");
-        printf("\n\n");
     }
 
-    for (int k = 0; k < MAX; k++) {
-        free(data_n[k]);
-        free(data_m[k]);
-        free(data_fixed[k]);
-    }
-
-    free(data_n);
-    free(data_m);
-    free(data_fixed);
-    Stopwatch.destroy(ctx);
+    for (int k = 0; k < MAX; k++)
+        free(data[k]);
+    free(data);
     fclose(fp);
+    Stopwatch.destroy(ctx);
     return 0;
+
 }
