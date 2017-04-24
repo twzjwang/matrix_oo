@@ -62,10 +62,13 @@ static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
     dst->priv = construct;
 
     for (int i = 0; i < l->row; i++)
-        for (int j = 0; j < r->col; j++)
+        for (int j = 0; j < r->col; j++) {
+            PRIV(dst)->values[i][j] = 0;
             for (int k = 0; k < l->col; k++)
                 PRIV(dst)->values[i][j] += PRIV(l)->values[i][k] *
                                            PRIV(r)->values[k][j];
+        }
+
     return true;
 }
 

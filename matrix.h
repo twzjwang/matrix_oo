@@ -19,6 +19,7 @@ typedef struct {
 /* Available matrix providers */
 extern MatrixAlgo NaiveMatrixProvider;
 extern MatrixAlgo SSEMatrixProvider;
+extern MatrixAlgo AVXMatrixProvider;
 extern MatrixAlgo StrassenMatrixProvider;
 extern MatrixAlgo StrassenSSEMatrixProvider;
 

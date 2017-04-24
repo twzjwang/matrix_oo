@@ -12,7 +12,7 @@ $(GIT_HOOKS):
 	@echo
 
 CC ?= gcc
-CFLAGS = -Wall -std=gnu99 -O2 -I. -msse4.1 -g
+CFLAGS = -Wall -std=gnu99 -O2 -I. -mavx2 -g
 LDFLAGS = -lpthread
 
 ifeq ($(strip $(PROFILE)),1)
@@ -25,7 +25,8 @@ OBJS := \
 	stopwatch.o \
 	matrix_naive.o \
 	matrix_sse.o \
-	matrix_strassen.o \
+    matrix_avx.o \
+    matrix_strassen.o \
 	matrix_strassen_sse.o
 
 deps := $(OBJS:%.o=%.o.d)

@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <time.h>
 
-#define MAX 512
+#define MAX 1024
 #define TEST_NUM 50
-#define ALGO_NUM 3
+#define ALGO_NUM 5
 
 static const int align = 16;
 
@@ -16,6 +16,8 @@ MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
     &SSEMatrixProvider,
     &StrassenMatrixProvider,
+    &StrassenSSEMatrixProvider,
+    &AVXMatrixProvider,
 };
 
 void generate_data(int **a, int m, int n, int range)
@@ -53,13 +55,13 @@ int main()
         MatrixAlgo *algo = matrix_providers[al];
         algo->get_info(info);
         printf("\nalgo     : %s\n\n", info);
-        for (int size = 4; size <= MAX; size *= 2) {
+        for (int size = 8; size <= MAX; size *= 2) {
             sum = 0;
             for (int t = 0; t < TEST_NUM; t++) {
                 algo = matrix_providers[al];
-                generate_data(data, size, size, 1000);
+                generate_data(data, size, size, 2);
                 algo->assign(&A, size, size, (int **)data);
-                generate_data(data, size, size, 1000);
+                generate_data(data, size, size, 2);
                 algo->assign(&B, size, size, (int **)data);
                 generate_data(data, size, 1, 2);
                 algo->assign(&r, size, 1, (int **)data);
@@ -73,8 +75,8 @@ int main()
                 }
                 log[t] = Stopwatch.read(ctx);
                 sum += log[t];
-                algo = matrix_providers[0];
                 //implement Freivalds’ algorithm
+                algo = matrix_providers[0];
                 if (!algo->mul(&L_Br, &B, &r)) {
                     printf("B x r error!\n");
                     continue;
@@ -87,8 +89,10 @@ int main()
                     printf("C x r error!\n");
                     continue;
                 }
-                if (!algo->equal(&L_ABr, &R_Cr))
-                    printf("ABr and Cr are not equal!");
+                if (!algo->equal(&L_ABr, &R_Cr)) {
+                    printf("ABr and Cr are not equal!\n");
+                    break;
+                }
             }
             avg[size][al] = sum / TEST_NUM;
             printf("matrix   : %d x %d\n", size, size);

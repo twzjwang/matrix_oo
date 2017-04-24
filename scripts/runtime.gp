@@ -9,4 +9,7 @@ set logscale xy
 
 plot 'record.csv' using 1:2 with lines linewidth 2  title 'naive(ms)', \
 '' using 1:3 with lines title 'sse(ms)', \
-'' using 1:4 with lines title 'strassen(ms)'
+'' using 1:4 with lines title 'strassen(ms)', \
+'' using 1:5 with lines title 'strassen sse(ms)', \
+'' using 1:6 with lines title 'avx(ms)'
+
