@@ -25,7 +25,8 @@ OBJS := \
 	stopwatch.o \
 	matrix_naive.o \
 	matrix_sse.o \
-	matrix_strassen.o
+	matrix_strassen.o \
+	matrix_strassen_sse.o
 
 deps := $(OBJS:%.o=%.o.d)
 OBJS := $(addprefix $(OUT)/,$(OBJS))
