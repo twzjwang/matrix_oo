@@ -87,16 +87,16 @@ static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
                 ymm6 = _mm256_load_si256((__m256i *) &(PRIV(r)->values[(k + 6)][y]));
                 ymm7 = _mm256_load_si256((__m256i *) &(PRIV(r)->values[(k + 7)][y]));
 
-                for (int i = 0; i < 8; i++) {
-                    // broadcast each elements from source 1
-                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 0)]);
-                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 1)]);
-                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 2)]);
-                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 3)]);
-                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 4)]);
-                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 5)]);
-                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 6)]);
-                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + i)][(k + 7)]);
+                {
+                    //0
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 0)][(k + 7)]);
 
                     // multiply
                     ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
@@ -119,33 +119,238 @@ static bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
                     ymm12 = _mm256_add_epi32(ymm12, ymm14);
                     ymm8 = _mm256_add_epi32(ymm8, ymm12);
 
-                    switch(i) {
-                    case 0:
-                        ymm16 = _mm256_add_epi32(ymm16, ymm8);
-                        break;
-                    case 1:
-                        ymm17 = _mm256_add_epi32(ymm17, ymm8);
-                        break;
-                    case 2:
-                        ymm18 = _mm256_add_epi32(ymm18, ymm8);
-                        break;
-                    case 3:
-                        ymm19 = _mm256_add_epi32(ymm19, ymm8);
-                        break;
-                    case 4:
-                        ymm20 = _mm256_add_epi32(ymm20, ymm8);
-                        break;
-                    case 5:
-                        ymm21 = _mm256_add_epi32(ymm21, ymm8);
-                        break;
-                    case 6:
-                        ymm22 = _mm256_add_epi32(ymm22, ymm8);
-                        break;
-                    case 7:
-                        ymm23 = _mm256_add_epi32(ymm23, ymm8);
-                        break;
-                    }
+                    ymm16 = _mm256_add_epi32(ymm16, ymm8);
 
+                    //1
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 1)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm17 = _mm256_add_epi32(ymm17, ymm8);
+
+                    //2
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 2)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm18 = _mm256_add_epi32(ymm18, ymm8);
+
+                    //3
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 3)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm19 = _mm256_add_epi32(ymm19, ymm8);
+
+                    //4
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 4)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm20 = _mm256_add_epi32(ymm20, ymm8);
+
+                    //5
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 5)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm21 = _mm256_add_epi32(ymm21, ymm8);
+
+                    //6
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 6)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm22 = _mm256_add_epi32(ymm22, ymm8);
+
+                    //7
+                    ymm8 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 0)]);
+                    ymm9 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 1)]);
+                    ymm10 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 2)]);
+                    ymm11 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 3)]);
+                    ymm12 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 4)]);
+                    ymm13 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 5)]);
+                    ymm14 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 6)]);
+                    ymm15 = _mm256_set1_epi32(PRIV(l)->values[(x + 7)][(k + 7)]);
+
+                    // multiply
+                    ymm8 = _mm256_mullo_epi32(ymm8, ymm0); // row 1, 2
+                    ymm9 = _mm256_mullo_epi32(ymm9, ymm1);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm9);
+
+                    ymm10 = _mm256_mullo_epi32(ymm10, ymm2); // row 3, 4
+                    ymm11 = _mm256_mullo_epi32(ymm11, ymm3);
+                    ymm10 = _mm256_add_epi32(ymm10, ymm11);
+
+                    ymm12 = _mm256_mullo_epi32(ymm12, ymm4); // row 5, 6
+                    ymm13 = _mm256_mullo_epi32(ymm13, ymm5);
+                    ymm12 = _mm256_add_epi32(ymm12, ymm13);
+
+                    ymm14 = _mm256_mullo_epi32(ymm14, ymm6); // row 7, 8
+                    ymm15 = _mm256_mullo_epi32(ymm15, ymm7);
+                    ymm14 = _mm256_add_epi32(ymm14, ymm15);
+
+                    ymm8 = _mm256_add_epi32(ymm8, ymm10); // sum
+                    ymm12 = _mm256_add_epi32(ymm12, ymm14);
+                    ymm8 = _mm256_add_epi32(ymm8, ymm12);
+
+                    ymm23 = _mm256_add_epi32(ymm23, ymm8);
                 }
             }
             _mm256_store_si256((__m256i *)(&PRIV(dst)->values[(x + 0)][y]), ymm16);
