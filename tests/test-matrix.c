@@ -76,22 +76,29 @@ int main()
                 log[t] = Stopwatch.read(ctx);
                 sum += log[t];
                 //implement Freivalds’ algorithm
+                int flag = 1;
                 algo = matrix_providers[0];
-                if (!algo->mul(&L_Br, &B, &r)) {
-                    printf("B x r error!\n");
-                    continue;
-                }
-                if (!algo->mul(&L_ABr, &A, &L_Br)) {
-                    printf("A x Br error!\n");
-                    continue;
-                }
-                if (!algo->mul(&R_Cr, &C, &r)) {
-                    printf("C x r error!\n");
-                    continue;
-                }
-                if (!algo->equal(&L_ABr, &R_Cr)) {
-                    printf("ABr and Cr are not equal!\n");
-                    break;
+                for (int i = 0; i < 10 && flag; i++) {
+                    if (!algo->mul(&L_Br, &B, &r)) {
+                        printf("B x r error!\n");
+                        flag = 0;
+                        continue;
+                    }
+                    if (!algo->mul(&L_ABr, &A, &L_Br)) {
+                        printf("A x Br error!\n");
+                        flag = 0;
+                        continue;
+                    }
+                    if (!algo->mul(&R_Cr, &C, &r)) {
+                        printf("C x r error!\n");
+                        flag = 0;
+                        continue;
+                    }
+                    if (!algo->equal(&L_ABr, &R_Cr)) {
+                        printf("ABr and Cr are not equal!\n");
+                        flag = 0;
+                        break;
+                    }
                 }
             }
             avg[size][al] = sum / TEST_NUM;
